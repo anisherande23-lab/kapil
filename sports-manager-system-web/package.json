@@ -1,0 +1,32 @@
+{
+  "name": "sports-manager-system-web",
+  "version": "1.0.0",
+  "description": "Dynamic Sports Management System & CI/CD Pipeline for MIT-WPU CSE30040 Cloud Computing and DevOps CCA 2",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix"
+  },
+  "keywords": [
+    "sports-management",
+    "devops",
+    "cicd",
+    "express",
+    "ejs",
+    "docker",
+    "mit-wpu"
+  ],
+  "author": "Kapil (MIT World Peace University, Pune)",
+  "license": "MIT",
+  "dependencies": {
+    "ejs": "^3.1.10",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.15.0",
+    "eslint": "^9.15.0",
+    "globals": "^15.12.0"
+  }
+}

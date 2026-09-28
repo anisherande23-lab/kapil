@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ArenaOps — MIT-WPU Sports Management System</title>
+  <link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <div class="container header-inner">
+      <div class="brand">
+        <span class="brand-mark">AO</span>
+        <div>
+          <h1 class="brand-title">ArenaOps Sports Management System</h1>
+          <p class="brand-subtitle">MIT World Peace University · Department of Computer Engineering &amp; Technology · CSE30040</p>
+        </div>
+      </div>
+      <div class="header-meta">
+        <a href="/health" class="meta-link">Health Check</a>
+        <span class="meta-sep">·</span>
+        <a href="/api/matches" class="meta-link">JSON Telemetry API</a>
+        <span class="meta-sep">·</span>
+        <span class="commit-tag">SHA: <code><%= commitSha %></code></span>
+      </div>
+    </div>
+  </header>
+
+  <main class="container main-content">
+    <% if (success) { %>
+      <div class="flash-banner flash-success" role="status">
+        <strong>Success:</strong> <%- success %>
+      </div>
+    <% } %>
+
+    <% if (error) { %>
+      <div class="flash-banner flash-error" role="alert">
+        <strong>Validation Error:</strong> <%- error %>
+      </div>
+    <% } %>
+
+    <section class="stats-section" aria-label="Live Arena Statistics">
+      <div class="stat-card">
+        <span class="stat-label">Total Fixtures</span>
+        <strong class="stat-value"><%= stats.totalItems %></strong>
+        <span class="stat-note"><%= stats.liveCount %> live · <%= stats.scheduledCount %> scheduled</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Completion Rate</span>
+        <strong class="stat-value"><%= stats.completionRate %>%</strong>
+        <span class="stat-note"><%= stats.completedCount %> of <%= stats.totalItems %> matches concluded</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Avg Match Intensity</span>
+        <strong class="stat-value"><%= stats.averageRating %> / 5</strong>
+        <span class="stat-note">Tournament priority index</span>
+      </div>
+      <div class="stat-card">
+        <span class="stat-label">Active Build Commit</span>
+        <strong class="stat-value mono"><%= stats.activeCommit %></strong>
+        <span class="stat-note">Automated CI/CD verified</span>
+      </div>
+    </section>
+
+    <div class="workspace-grid">
+      <section class="form-panel">
+        <h2 class="panel-title">Schedule New Fixture</h2>
+        <p class="panel-desc">Register an inter-university tournament match, court booking, or athletics event.</p>
+
+        <form action="/matches" method="POST" class="match-form">
+          <div class="form-group">
+            <label for="title">Fixture / Tournament Title *</label>
+            <input
+              type="text"
+              id="title"
+              name="title"
+              required
+              placeholder="e.g. MIT-WPU Inter-College Football Semi-Final"
+            />
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="teams">Competing Teams / Athletes</label>
+              <input
+                type="text"
+                id="teams"
+                name="teams"
+                placeholder="e.g. CET Wolves vs ENTC Falcons"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="venue">Arena / Stadium Venue</label>
+              <input
+                type="text"
+                id="venue"
+                name="venue"
+                placeholder="e.g. MIT-WPU Main Turf Arena"
+              />
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="category">Sport Discipline *</label>
+              <select id="category" name="category" required>
+                <% categories.forEach(function(cat) { %>
+                  <option value="<%= cat %>"><%= cat %></option>
+                <% }); %>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="status">Fixture Status *</label>
+              <select id="status" name="status" required>
+                <% statuses.forEach(function(st) { %>
+                  <option value="<%= st %>"><%= st %></option>
+                <% }); %>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="rating">
+              Tournament Intensity / Priority Rating (1–5):
+              <output id="ratingOutput" for="rating">4</output> / 5
+            </label>
+            <input
+              type="range"
+              id="rating"
+              name="rating"
+              min="1"
+              max="5"
+              step="1"
+              value="4"
+              oninput="document.getElementById('ratingOutput').value = this.value"
+            />
+            <div class="range-scale">
+              <span>1 (Friendly)</span>
+              <span>3 (League)</span>
+              <span>5 (Championship Final)</span>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-submit">Register Match Fixture</button>
+        </form>
+      </section>
+
+      <section class="list-panel">
+        <div class="list-header">
+          <h2 class="panel-title">Active Tournament Fixtures (<%= matches.length %>)</h2>
+          <span class="panel-meta">In-Memory Store · XSS Sanitized</span>
+        </div>
+
+        <% if (matches.length === 0) { %>
+          <div class="empty-state">
+            <p>No sports fixtures currently registered. Add a fixture using the form.</p>
+          </div>
+        <% } else { %>
+          <div class="matches-list">
+            <% matches.forEach(function(item) { %>
+              <article class="match-card">
+                <div class="match-main">
+                  <div class="match-meta-line">
+                    <span class="meta-category"><%= item.category %></span>
+                    <span class="meta-sep">·</span>
+                    <span class="meta-status status-<%= item.status.toLowerCase() %>"><%= item.status %></span>
+                    <span class="meta-sep">·</span>
+                    <span class="meta-rating">Intensity <%= item.rating %>/5</span>
+                  </div>
+                  <h3 class="match-title"><%- item.title %></h3>
+                  <p class="match-details">
+                    <strong>Matchup:</strong> <%- item.teams || 'Open Roster' %> &nbsp;|&nbsp;
+                    <strong>Venue:</strong> <%- item.venue || 'Main Campus Arena' %>
+                  </p>
+                </div>
+                <div class="match-actions">
+                  <form action="/matches/<%= item.id %>/delete" method="POST">
+                    <button type="submit" class="btn-delete" title="Remove fixture">Delete</button>
+                  </form>
+                </div>
+              </article>
+            <% }); %>
+          </div>
+        <% } %>
+      </section>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-inner">
+      <span>MIT World Peace University · Cloud Computing &amp; DevOps (CSE30040) · CCA 2</span>
+      <span class="footer-commit">commit <%= commitSha %></span>
+    </div>
+  </footer>
+</body>
+</html>

@@ -1,0 +1,64 @@
+name: Sports Manager System CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    name: "🧪 Lint & Unit/Integration Tests"
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install clean dependencies
+        run: npm ci
+
+      - name: Run ESLint code quality gate
+        run: npm run lint
+
+      - name: Run automated Node:test suite
+        run: npm test
+
+  build:
+    name: "🐳 Docker Container Build & Smoke Test"
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build production Docker image with GIT_SHA
+        run: docker build --build-arg GIT_SHA=${{ github.sha }} -t sports-manager-system-web .
+
+      - name: Start container in detached mode
+        run: docker run -d -p 3000:3000 --name sports-manager-system-web sports-manager-system-web
+
+      - name: Wait for container startup
+        run: sleep 5
+
+      - name: Verify container health check endpoint
+        run: curl -f http://localhost:3000/health
+
+      - name: Stop running container
+        run: docker stop sports-manager-system-web
+
+  deploy:
+    name: "🚀 Continuous Deployment (Render)"
+    needs: build
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Render deployment webhook
+        run: curl -fsS -X POST "${{ secrets.RENDER_DEPLOY_HOOK }}&ref=${{ github.sha }}"
